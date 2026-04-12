@@ -27,10 +27,12 @@ A full-stack application for managing products, categories, and suppliers with a
 
 ## Features
 
-- Admin Overview: High-level statistics of inventory.
+- Admin Overview: High-level statistics of inventory, including active orders and carts.
 - Product Management: CRUD operations for products including image URL support.
 - Category Management: Organization of products into categories.
 - Supplier Management: Tracking of supplier contact information and links to products.
+- Order Management: Create orders and dynamically assign multiple products using a modern visual selection interface.
+- Cart Management: Group logic for nesting and associating multiple active orders to dedicated cart buckets.
 - Responsive Design: Clean and functional admin dashboard built with Tailwind CSS.
 
 ## Project Structure
@@ -38,3 +40,23 @@ A full-stack application for managing products, categories, and suppliers with a
 - /TP1Category: Spring Boot backend source code and Dockerfile.
 - /ecommerce-frontend: React frontend source code and Dockerfile.
 - docker-compose.yml: Orchestration of the frontend, backend, and database services.
+
+## Screenshots
+
+### Dashboard Overview
+![Dashboard Overview](./screenshots/dashboard.png)
+
+### Product Creation Interface
+![Product Modal](./screenshots/product_form.png)
+
+### Category Creation Interface
+![Category Modal](./screenshots/category_form.png)
+
+### Supplier Creation Interface
+![Supplier Modal](./screenshots/supplier_form.png)
+
+### Order Creation Interface
+![Order Modal](./screenshots/order_form.png)
+
+### Cart Grouping Interface
+![Cart Modal](./screenshots/cart_form.png)
