@@ -1,5 +1,5 @@
 import React from 'react';
-import { LayoutDashboard, Package, Tag, Users, Settings, LogOut, PackageSearch } from 'lucide-react';
+import { LayoutDashboard, Package, Tag, Users, Settings, LogOut, PackageSearch, ShoppingBag, ShoppingCart } from 'lucide-react';
 
 const Sidebar = ({ activeView, setActiveView }) => {
   const menuItems = [
@@ -7,6 +7,8 @@ const Sidebar = ({ activeView, setActiveView }) => {
     { id: 'products', label: 'Products', icon: Package },
     { id: 'categories', label: 'Categories', icon: Tag },
     { id: 'suppliers', label: 'Suppliers', icon: Users },
+    { id: 'orders', label: 'Orders', icon: ShoppingBag },
+    { id: 'carts', label: 'Carts', icon: ShoppingCart },
   ];
 
   return (

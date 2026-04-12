@@ -3,15 +3,19 @@ import DashboardLayout from './components/DashboardLayout';
 import ProductTable from './components/ProductTable';
 import CategoryTable from './components/CategoryTable';
 import SupplierTable from './components/SupplierTable';
+import OrderTable from './components/OrderTable';
+import CartTable from './components/CartTable';
 import AddProductModal from './components/AddProductModal';
-import { getProducts, getCategories, getSuppliers, deleteProduct, deleteCategory, deleteSupplier } from './services/api';
-import { Package, Tag, Users, LayoutDashboard, Plus, RefreshCw, Layers } from 'lucide-react';
+import { getProducts, getCategories, getSuppliers, deleteProduct, deleteCategory, deleteSupplier, getOrders, getCarts, addOrder, addCart, deleteOrder, deleteCart } from './services/api';
+import { Package, Tag, Users, LayoutDashboard, Plus, RefreshCw, Layers, ShoppingBag, ShoppingCart } from 'lucide-react';
 
 function App() {
   const [activeView, setActiveView] = useState('overview');
   const [products, setProducts] = useState([]);
   const [categories, setCategories] = useState([]);
   const [suppliers, setSuppliers] = useState([]);
+  const [orders, setOrders] = useState([]);
+  const [carts, setCarts] = useState([]);
   const [loading, setLoading] = useState(false);
   const [isModalOpen, setIsModalOpen] = useState(false);
   const [modalTab, setModalTab] = useState('product');
@@ -23,10 +27,12 @@ function App() {
   const fetchAllData = async () => {
     setLoading(true);
     try {
-      const [p, c, s] = await Promise.all([getProducts(), getCategories(), getSuppliers()]);
+      const [p, c, s, o, cr] = await Promise.all([getProducts(), getCategories(), getSuppliers(), getOrders(), getCarts()]);
       setProducts(p.data);
       setCategories(c.data);
       setSuppliers(s.data);
+      setOrders(o.data);
+      setCarts(cr.data);
     } catch (err) {
       console.error("Failed to fetch data", err);
     } finally {
@@ -40,6 +46,8 @@ function App() {
       if (type === 'product') await deleteProduct(id);
       if (type === 'category') await deleteCategory(id);
       if (type === 'supplier') await deleteSupplier(id);
+      if (type === 'order') await deleteOrder(id);
+      if (type === 'cart') await deleteCart(id);
       fetchAllData();
     } catch (err) {
       alert(`Failed to delete ${type}. It might be linked to other records.`);
@@ -58,6 +66,8 @@ function App() {
           { label: 'Total Products', value: products.length, icon: Package, color: 'indigo' },
           { label: 'Total Categories', value: categories.length, icon: Tag, color: 'emerald' },
           { label: 'Total Suppliers', value: suppliers.length, icon: Users, color: 'rose' },
+          { label: 'Total Orders', value: orders.length, icon: ShoppingBag, color: 'blue' },
+          { label: 'Total Carts', value: carts.length, icon: ShoppingCart, color: 'teal' },
         ].map((stat, i) => (
           <div key={i} className="bg-white p-8 rounded-[2.5rem] border border-slate-100 shadow-sm hover:shadow-md transition-all flex items-center justify-between group">
             <div>
@@ -104,7 +114,7 @@ function App() {
           </button>
           {activeView !== 'overview' && (
             <button 
-              onClick={() => openModal(activeView === 'products' ? 'product' : activeView === 'categories' ? 'category' : 'supplier')}
+              onClick={() => openModal(activeView.slice(0, -1))}
               className="flex items-center gap-3 px-6 py-4 bg-indigo-600 text-white rounded-2xl font-black text-xs uppercase tracking-widest hover:bg-indigo-700 shadow-xl shadow-indigo-100 transition-all active:scale-95"
             >
               <Plus className="w-4 h-4" /> Add {activeView.slice(0, -1)}
@@ -118,6 +128,8 @@ function App() {
         {activeView === 'products' && <ProductTable products={products} onDelete={id => handleDelete('product', id)} onEdit={() => {}} />}
         {activeView === 'categories' && <CategoryTable categories={categories} onDelete={id => handleDelete('category', id)} onEdit={() => {}} />}
         {activeView === 'suppliers' && <SupplierTable suppliers={suppliers} onDelete={id => handleDelete('supplier', id)} onEdit={() => {}} />}
+        {activeView === 'orders' && <OrderTable orders={orders} onDelete={id => handleDelete('order', id)} />}
+        {activeView === 'carts' && <CartTable carts={carts} onDelete={id => handleDelete('cart', id)} />}
       </div>
 
       <AddProductModal 

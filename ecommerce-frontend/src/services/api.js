@@ -22,4 +22,12 @@ export const addSupplier = (supplier) => api.post('/supplier/add', supplier);
 export const updateSupplier = (id, supplier) => api.put(`/supplier/update/${id}`, supplier);
 export const deleteSupplier = (id) => api.delete(`/supplier/delete/${id}`);
 
+export const getOrders = () => api.get('/order/list');
+export const addOrder = (order) => api.post('/order/add', order);
+export const deleteOrder = (id) => api.delete(`/order/delete/${id}`);
+
+export const getCarts = () => api.get('/cart/list');
+export const addCart = (cart) => api.post('/cart/add', cart);
+export const deleteCart = (id) => api.delete(`/cart/delete/${id}`);
+
 export default api;

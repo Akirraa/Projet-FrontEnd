@@ -4,7 +4,10 @@ import jakarta.persistence.Entity;
 import jakarta.persistence.GeneratedValue;
 import jakarta.persistence.GenerationType;
 import jakarta.persistence.Id;
+import jakarta.persistence.ManyToMany;
 import jakarta.persistence.ManyToOne;
+import com.fasterxml.jackson.annotation.JsonIgnore;
+import java.util.List;
 
 @Entity
 public class Product {
@@ -12,7 +15,7 @@ public class Product {
         @GeneratedValue(strategy = GenerationType.IDENTITY)
     private Long id;
     private String name;
-    private int price;
+    private Integer price;
     private String description;
     private String imageUrl;
 
@@ -22,7 +25,11 @@ public class Product {
     @ManyToOne
     private Supplier supplier;
 
-    public Product(Long id, String name, int price, String description, String imageUrl) {
+    @ManyToMany(mappedBy = "products")
+    @JsonIgnore
+    private List<Order> orders;
+
+    public Product(Long id, String name, Integer price, String description, String imageUrl) {
         this.id = id;
         this.name = name;
         this.price = price;
@@ -45,7 +52,7 @@ public class Product {
         return name;
     }
 
-    public int getPrice() {
+    public Integer getPrice() {
         return price;
     }
 
@@ -65,7 +72,7 @@ public class Product {
         return supplier;
     }
 
-    public void setPrice(int price) {
+    public void setPrice(Integer price) {
         this.price = price;
     }
 
@@ -87,5 +94,13 @@ public class Product {
 
     public void setSupplier(Supplier supplier) {
         this.supplier = supplier;
+    }
+
+    public List<Order> getOrders() {
+        return orders;
+    }
+
+    public void setOrders(List<Order> orders) {
+        this.orders = orders;
     }
 }

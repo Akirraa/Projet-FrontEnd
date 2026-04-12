@@ -1,17 +1,24 @@
 import React, { useState, useEffect } from 'react';
-import { X, Plus, Package, Tag, DollarSign, AlignLeft, Link, Truck } from 'lucide-react';
-import { addProduct, addCategory, addSupplier, getSuppliers, getCategories } from '../services/api';
+import { X, Plus, Package, Tag, DollarSign, AlignLeft, Link, Truck, ShoppingBag, ShoppingCart } from 'lucide-react';
+import { addProduct, addCategory, addSupplier, getSuppliers, getCategories, getProducts, getCarts, getOrders, addOrder, addCart } from '../services/api';
 
 const AddProductModal = ({ isOpen, onClose, onRefresh, initialTab = 'product' }) => {
   const [activeTab, setActiveTab ] = useState(initialTab);
   const [categories, setCategories] = useState([]);
   const [suppliers, setSuppliers] = useState([]);
+  const [products, setProducts] = useState([]);
+  const [carts, setCarts] = useState([]);
+  const [orders, setOrders] = useState([]);
   const [loading, setLoading ] = useState(false);
 
   // Form States
   const [productData, setProductData ] = useState({ name: '', price: '', description: '', imageUrl: '', categoryId: '', supplierId: '' });
   const [categoryName, setCategoryName ] = useState('');
   const [supplierData, setSupplierData ] = useState({ name: '', email: '', phone: '', address: '' });
+  
+  const [orderCartId, setOrderCartId] = useState('');
+  const [orderProductIds, setOrderProductIds] = useState([]);
+  const [cartOrderIds, setCartOrderIds] = useState([]);
 
   useEffect(() => {
     if (isOpen) {
@@ -22,9 +29,12 @@ const AddProductModal = ({ isOpen, onClose, onRefresh, initialTab = 'product' })
 
   const fetchRefs = async () => {
     try {
-      const [catRes, supRes] = await Promise.all([getCategories(), getSuppliers()]);
+      const [catRes, supRes, prodRes, cartRes, orderRes] = await Promise.all([getCategories(), getSuppliers(), getProducts(), getCarts(), getOrders()]);
       setCategories(catRes.data);
       setSuppliers(supRes.data);
+      setProducts(prodRes.data || []);
+      setCarts(cartRes.data || []);
+      setOrders(orderRes.data || []);
     } catch (err) { console.error(err); }
   };
 
@@ -66,6 +76,33 @@ const AddProductModal = ({ isOpen, onClose, onRefresh, initialTab = 'product' })
     finally { setLoading(false); }
   };
 
+  const handleSubmitOrder = async (e) => {
+    e.preventDefault();
+    setLoading(true);
+    try {
+      await addOrder({
+        cart: orderCartId ? { id: parseInt(orderCartId) } : null,
+        products: orderProductIds.map(id => ({ id: parseInt(id) }))
+      });
+      onRefresh();
+      onClose();
+    } catch (err) { alert('Error adding order'); }
+    finally { setLoading(false); }
+  };
+
+  const handleSubmitCart = async (e) => {
+    e.preventDefault();
+    setLoading(true);
+    try {
+      await addCart({
+        orders: cartOrderIds.map(id => ({ id: parseInt(id) }))
+      });
+      onRefresh();
+      onClose();
+    } catch (err) { alert('Error adding cart'); }
+    finally { setLoading(false); }
+  };
+
   if (!isOpen) return null;
 
   return (
@@ -81,16 +118,18 @@ const AddProductModal = ({ isOpen, onClose, onRefresh, initialTab = 'product' })
           </button>
         </div>
 
-        <div className="flex bg-slate-100/80 p-1.5 m-6 rounded-2xl">
-          {['product', 'category', 'supplier'].map((tab) => (
+        <div className="flex bg-slate-100/80 p-1.5 m-6 rounded-2xl overflow-x-auto hide-scrollbar">
+          {['product', 'category', 'supplier', 'order', 'cart'].map((tab) => (
             <button 
               key={tab}
               onClick={() => setActiveTab(tab)}
-              className={`flex-1 flex items-center justify-center gap-2 py-3 rounded-xl text-xs font-black uppercase tracking-widest transition-all ${activeTab === tab ? 'bg-white text-indigo-600 shadow-sm outline outline-1 outline-slate-200/50' : 'text-slate-400 hover:text-slate-600'}`}
+              className={`flex-1 min-w-[100px] flex items-center justify-center gap-2 py-3 rounded-xl text-xs font-black uppercase tracking-widest transition-all ${activeTab === tab ? 'bg-white text-indigo-600 shadow-sm outline outline-1 outline-slate-200/50' : 'text-slate-400 hover:text-slate-600'}`}
             >
               {tab === 'product' && <Package className="w-4 h-4" />}
               {tab === 'category' && <Tag className="w-4 h-4" />}
               {tab === 'supplier' && <Truck className="w-4 h-4" />}
+              {tab === 'order' && <ShoppingBag className="w-4 h-4" />}
+              {tab === 'cart' && <ShoppingCart className="w-4 h-4" />}
               {tab}
             </button>
           ))}
@@ -171,6 +210,76 @@ const AddProductModal = ({ isOpen, onClose, onRefresh, initialTab = 'product' })
               </div>
               <button type="submit" disabled={loading} className="w-full h-14 bg-indigo-600 hover:bg-indigo-700 text-white rounded-2xl font-black text-sm uppercase tracking-widest transition-all shadow-lg shadow-indigo-200 mt-4">
                 {loading ? 'Processing...' : 'Register Supplier'}
+              </button>
+            </form>
+          )}
+
+          {activeTab === 'order' && (
+            <form onSubmit={handleSubmitOrder} className="space-y-5 animate-in slide-in-from-right-4 duration-300">
+              <div>
+                <label className="label-style">Assign to Cart</label>
+                <select className="input-field-new appearance-none" value={orderCartId} onChange={e => setOrderCartId(e.target.value)}>
+                  <option value="">No Cart</option>
+                  {carts.map(c => <option key={c.id} value={c.id}>Cart #{c.id}</option>)}
+                </select>
+              </div>
+              <div className="pt-2">
+                <label className="label-style">Select Products</label>
+                <div className="max-h-48 overflow-y-auto space-y-2 pr-2 custom-scrollbar">
+                  {products.length === 0 ? (
+                    <p className="text-xs font-bold text-slate-400 p-4 text-center bg-slate-50 rounded-xl border border-slate-100">No products available. Add some first!</p>
+                  ) : products.map(p => (
+                    <label key={p.id} className={`flex items-center gap-3 p-3 rounded-xl border cursor-pointer transition-all ${orderProductIds.includes(p.id) ? 'bg-indigo-50/50 border-indigo-200' : 'bg-slate-50/50 border-slate-100 hover:bg-slate-100'}`}>
+                      <input 
+                        type="checkbox" 
+                        className="w-5 h-5 rounded border-slate-300 text-indigo-600 focus:ring-indigo-500" 
+                        checked={orderProductIds.includes(p.id)}
+                        onChange={(e) => {
+                          if (e.target.checked) setOrderProductIds([...orderProductIds, p.id]);
+                          else setOrderProductIds(orderProductIds.filter(id => id !== p.id));
+                        }}
+                      />
+                      <div className="flex-1 overflow-hidden">
+                        <p className="text-sm font-bold text-slate-800 line-clamp-1">{p.name}</p>
+                        <p className="text-xs font-black text-slate-500">${p.price}</p>
+                      </div>
+                    </label>
+                  ))}
+                </div>
+              </div>
+              <button type="submit" disabled={loading} className="w-full h-14 bg-indigo-600 hover:bg-indigo-700 text-white rounded-2xl font-black text-sm uppercase tracking-widest transition-all shadow-lg shadow-indigo-200 mt-4">
+                {loading ? 'Processing...' : 'Create Order'}
+              </button>
+            </form>
+          )}
+
+          {activeTab === 'cart' && (
+            <form onSubmit={handleSubmitCart} className="space-y-5 animate-in slide-in-from-right-4 duration-300">
+              <div className="pt-2">
+                <label className="label-style">Select Orders</label>
+                <div className="max-h-48 overflow-y-auto space-y-2 pr-2 custom-scrollbar">
+                  {orders.length === 0 ? (
+                    <p className="text-xs font-bold text-slate-400 p-4 text-center bg-slate-50 rounded-xl border border-slate-100">No orders available. Add some first!</p>
+                  ) : orders.map(o => (
+                    <label key={o.id} className={`flex items-center gap-3 p-3 rounded-xl border cursor-pointer transition-all ${cartOrderIds.includes(o.id) ? 'bg-indigo-50/50 border-indigo-200' : 'bg-slate-50/50 border-slate-100 hover:bg-slate-100'}`}>
+                      <input 
+                        type="checkbox" 
+                        className="w-5 h-5 rounded border-slate-300 text-indigo-600 focus:ring-indigo-500" 
+                        checked={cartOrderIds.includes(o.id)}
+                        onChange={(e) => {
+                          if (e.target.checked) setCartOrderIds([...cartOrderIds, o.id]);
+                          else setCartOrderIds(cartOrderIds.filter(id => id !== o.id));
+                        }}
+                      />
+                      <div className="flex-1">
+                        <p className="text-sm font-bold text-slate-800">Order #{o.id}</p>
+                      </div>
+                    </label>
+                  ))}
+                </div>
+              </div>
+              <button type="submit" disabled={loading} className="w-full h-14 bg-indigo-600 hover:bg-indigo-700 text-white rounded-2xl font-black text-sm uppercase tracking-widest transition-all shadow-lg shadow-indigo-200 mt-4">
+                {loading ? 'Processing...' : 'Create Cart'}
               </button>
             </form>
           )}
