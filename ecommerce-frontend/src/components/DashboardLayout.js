@@ -1,8 +1,17 @@
 import React from 'react';
 import Sidebar from './Sidebar';
+import { useAuth } from '../context/AuthContext';
 import { Bell, Search, UserCircle } from 'lucide-react';
 
+const roleDisplayName = (role) => {
+  if (role === 'ROLE_SUPER_ADMIN') return 'Super Admin';
+  if (role === 'ROLE_ADMIN') return 'Admin';
+  return 'Client';
+};
+
 const DashboardLayout = ({ children, activeView, setActiveView }) => {
+  const { user } = useAuth();
+
   return (
     <div className="flex bg-slate-50 min-h-screen">
       <Sidebar activeView={activeView} setActiveView={setActiveView} />
@@ -26,8 +35,8 @@ const DashboardLayout = ({ children, activeView, setActiveView }) => {
             <div className="h-8 w-px bg-slate-200 mx-2" />
             <div className="flex items-center gap-3 cursor-pointer group">
               <div className="text-right">
-                <p className="text-sm font-bold text-slate-800 leading-none">Admin User</p>
-                <p className="text-xs font-semibold text-indigo-600">Super Admin</p>
+                <p className="text-sm font-bold text-slate-800 leading-none">{user?.email || 'Admin User'}</p>
+                <p className="text-xs font-semibold text-indigo-600">{roleDisplayName(user?.role)}</p>
               </div>
               <div className="bg-indigo-100 p-1.5 rounded-xl group-hover:scale-110 transition-transform">
                 <UserCircle className="w-6 h-6 text-indigo-600" />
@@ -46,3 +55,4 @@ const DashboardLayout = ({ children, activeView, setActiveView }) => {
 };
 
 export default DashboardLayout;
+

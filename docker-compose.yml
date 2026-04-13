@@ -17,6 +17,8 @@ services:
     restart: always
     ports:
       - "8080:8080"
+    env_file:
+      - .env
     environment:
       SPRING_DATASOURCE_URL: jdbc:mysql://db:3306/tp1category?createDatabaseIfNotExist=true
       SPRING_DATASOURCE_USERNAME: root

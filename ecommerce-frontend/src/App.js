@@ -1,4 +1,11 @@
 import React, { useState, useEffect } from 'react';
+import { Routes, Route, Navigate, useNavigate } from 'react-router-dom';
+import { useAuth } from './context/AuthContext';
+
+// Pages & Layouts
+import LoginSignup from './components/LoginSignup';
+import ClientDashboard from './components/ClientDashboard';
+import SuperAdminDashboard from './components/SuperAdminDashboard';
 import DashboardLayout from './components/DashboardLayout';
 import ProductTable from './components/ProductTable';
 import CategoryTable from './components/CategoryTable';
@@ -6,10 +13,31 @@ import SupplierTable from './components/SupplierTable';
 import OrderTable from './components/OrderTable';
 import CartTable from './components/CartTable';
 import AddProductModal from './components/AddProductModal';
+
 import { getProducts, getCategories, getSuppliers, deleteProduct, deleteCategory, deleteSupplier, getOrders, getCarts, addOrder, addCart, deleteOrder, deleteCart } from './services/api';
 import { Package, Tag, Users, LayoutDashboard, Plus, RefreshCw, Layers, ShoppingBag, ShoppingCart } from 'lucide-react';
 
-function App() {
+// ─── Protected Route ───────────────────────────────────────────────────────────
+// Renders children only if user has one of the allowedRoles.
+// Redirects to /login if not authenticated, or to / if authenticated but wrong role.
+const ProtectedRoute = ({ children, allowedRoles }) => {
+  const { user, loading } = useAuth();
+
+  if (loading) {
+    return (
+      <div className="min-h-screen flex items-center justify-center bg-slate-50">
+        <div className="w-8 h-8 border-4 border-indigo-600 border-t-transparent rounded-full animate-spin" />
+      </div>
+    );
+  }
+
+  if (!user) return <Navigate to="/login" replace />;
+  if (allowedRoles && !allowedRoles.includes(user.role)) return <Navigate to="/unauthorized" replace />;
+  return children;
+};
+
+// ─── Admin Dashboard (existing) ───────────────────────────────────────────────
+const AdminDashboard = () => {
   const [activeView, setActiveView] = useState('overview');
   const [products, setProducts] = useState([]);
   const [categories, setCategories] = useState([]);
@@ -20,9 +48,7 @@ function App() {
   const [isModalOpen, setIsModalOpen] = useState(false);
   const [modalTab, setModalTab] = useState('product');
 
-  useEffect(() => {
-    fetchAllData();
-  }, []);
+  useEffect(() => { fetchAllData(); }, []);
 
   const fetchAllData = async () => {
     setLoading(true);
@@ -54,10 +80,7 @@ function App() {
     }
   };
 
-  const openModal = (tab) => {
-    setModalTab(tab);
-    setIsModalOpen(true);
-  };
+  const openModal = (tab) => { setModalTab(tab); setIsModalOpen(true); };
 
   const renderOverview = () => (
     <div className="space-y-8 animate-in fade-in duration-700">
@@ -80,11 +103,10 @@ function App() {
           </div>
         ))}
       </div>
-
       <div className="bg-indigo-600 rounded-[3rem] p-12 text-white relative overflow-hidden shadow-2xl shadow-indigo-100">
         <div className="relative z-10">
-          <h2 className="text-4xl font-black mb-4 tracking-tight">Manage your entire <br/> inventory in one place.</h2>
-          <p className="text-indigo-100 font-bold max-w-md mb-8">Efficiently track products, categories, and suppliers with our new administration suite.</p>
+          <h2 className="text-4xl font-black mb-4 tracking-tight">Manage your entire <br/>inventory in one place.</h2>
+          <p className="text-indigo-100 font-bold max-w-md mb-8">Efficiently track products, categories, and suppliers with our administration suite.</p>
           <div className="flex gap-4">
             <button onClick={() => setActiveView('products')} className="px-8 py-4 bg-white text-indigo-600 rounded-2xl font-black text-sm uppercase tracking-widest hover:scale-105 active:scale-95 transition-all shadow-lg shadow-black/10">Explore Products</button>
             <button onClick={() => openModal('product')} className="px-8 py-4 bg-indigo-500 text-white rounded-2xl font-black text-sm uppercase tracking-widest hover:bg-indigo-400 transition-all border border-indigo-400/30">Quick Add</button>
@@ -104,19 +126,12 @@ function App() {
             <LayoutDashboard className="w-4 h-4" /> Administration Panel
           </p>
         </div>
-        
         <div className="flex items-center gap-3">
-          <button 
-            onClick={fetchAllData}
-            className="p-4 bg-white border border-slate-200 text-slate-500 rounded-2xl hover:text-indigo-600 hover:border-indigo-100 transition-all shadow-sm"
-          >
+          <button onClick={fetchAllData} className="p-4 bg-white border border-slate-200 text-slate-500 rounded-2xl hover:text-indigo-600 hover:border-indigo-100 transition-all shadow-sm">
             <RefreshCw className={`w-5 h-5 ${loading ? 'animate-spin' : ''}`} />
           </button>
           {activeView !== 'overview' && (
-            <button 
-              onClick={() => openModal(activeView.slice(0, -1))}
-              className="flex items-center gap-3 px-6 py-4 bg-indigo-600 text-white rounded-2xl font-black text-xs uppercase tracking-widest hover:bg-indigo-700 shadow-xl shadow-indigo-100 transition-all active:scale-95"
-            >
+            <button onClick={() => openModal(activeView.slice(0, -1))} className="flex items-center gap-3 px-6 py-4 bg-indigo-600 text-white rounded-2xl font-black text-xs uppercase tracking-widest hover:bg-indigo-700 shadow-xl shadow-indigo-100 transition-all active:scale-95">
               <Plus className="w-4 h-4" /> Add {activeView.slice(0, -1)}
             </button>
           )}
@@ -132,14 +147,75 @@ function App() {
         {activeView === 'carts' && <CartTable carts={carts} onDelete={id => handleDelete('cart', id)} />}
       </div>
 
-      <AddProductModal 
-        isOpen={isModalOpen} 
-        onClose={() => setIsModalOpen(false)} 
-        onRefresh={fetchAllData} 
-        initialTab={modalTab}
-      />
+      <AddProductModal isOpen={isModalOpen} onClose={() => setIsModalOpen(false)} onRefresh={fetchAllData} initialTab={modalTab} />
     </DashboardLayout>
+  );
+};
+
+// ─── Unauthorized Page ─────────────────────────────────────────────────────────
+const Unauthorized = () => {
+  const navigate = useNavigate();
+  return (
+    <div className="min-h-screen bg-slate-50 flex items-center justify-center">
+      <div className="text-center max-w-md">
+        <div className="text-8xl mb-6">🚫</div>
+        <h1 className="text-3xl font-black text-slate-900 mb-3">Access Denied</h1>
+        <p className="text-slate-500 font-semibold mb-8">You don't have permission to view this page.</p>
+        <button onClick={() => navigate(-1)} className="px-8 py-4 bg-indigo-600 text-white rounded-2xl font-black hover:bg-indigo-700 transition-all active:scale-95">
+          Go Back
+        </button>
+      </div>
+    </div>
+  );
+};
+
+// ─── Root redirect based on role ──────────────────────────────────────────────
+const RootRedirect = () => {
+  const { user, loading } = useAuth();
+  if (loading) return <div className="min-h-screen flex items-center justify-center"><div className="w-8 h-8 border-4 border-indigo-600 border-t-transparent rounded-full animate-spin" /></div>;
+  if (!user) return <Navigate to="/login" replace />;
+  if (user.role === 'ROLE_SUPER_ADMIN') return <Navigate to="/super-admin" replace />;
+  if (user.role === 'ROLE_ADMIN') return <Navigate to="/admin" replace />;
+  return <Navigate to="/client" replace />;
+};
+
+// ─── App ──────────────────────────────────────────────────────────────────────
+function App() {
+  return (
+    <Routes>
+      {/* Public */}
+      <Route path="/login" element={<LoginSignup />} />
+
+      {/* Role root redirect */}
+      <Route path="/" element={<RootRedirect />} />
+
+      {/* Client */}
+      <Route path="/client" element={
+        <ProtectedRoute allowedRoles={['ROLE_CLIENT', 'ROLE_ADMIN', 'ROLE_SUPER_ADMIN']}>
+          <ClientDashboard />
+        </ProtectedRoute>
+      } />
+
+      {/* Admin */}
+      <Route path="/admin" element={
+        <ProtectedRoute allowedRoles={['ROLE_ADMIN', 'ROLE_SUPER_ADMIN']}>
+          <AdminDashboard />
+        </ProtectedRoute>
+      } />
+
+      {/* Super Admin */}
+      <Route path="/super-admin" element={
+        <ProtectedRoute allowedRoles={['ROLE_SUPER_ADMIN']}>
+          <SuperAdminDashboard />
+        </ProtectedRoute>
+      } />
+
+      {/* Misc */}
+      <Route path="/unauthorized" element={<Unauthorized />} />
+      <Route path="*" element={<Navigate to="/" replace />} />
+    </Routes>
   );
 }
 
 export default App;
+

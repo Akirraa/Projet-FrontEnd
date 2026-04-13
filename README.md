@@ -1,62 +1,82 @@
-# Inventory Management Admin Dashboard
+# Inventory Management & E-commerce Suite
 
-A full-stack application for managing products, categories, and suppliers with a modern admin interface.
+A robust, full-stack application featuring an automated inventory management system and a integrated client shopping experience. Built with a modern microservices-ready architecture using Spring Boot and React.
 
-## Tech Stack
+## 🚀 New: Authentication & Authorization
+The system now features a secure, custom authentication layer with **Role-Based Access Control (RBAC)**:
 
-- Backend: Spring Boot (Java 17), MySQL
-- Frontend: React, Tailwind CSS, Lucide Icons
-- Infrastructure: Docker, Docker Compose
+- **Clients**: Default role for new users. Can browse products, manage a local persistent cart, and place orders (requires login).
+- **Admins**: Manage the core inventory data (Products, Categories, Suppliers, Orders).
+- **Super Admins**: Oversee the entire system, including user management and role assignments.
 
-## Prerequisites
+### Security Features
+- **BCrypt Hashing**: All passwords are salted and hashed for security.
+- **Secure Token Sessions**: UUID-based session tracking for simplified secure access.
+- **Automated Signup**: New users are assigned a strong, randomized password instantly displayed on screen and sent via email.
+- **Secret Management**: Sensitive configurations are kept in a local `.env` file, excluded from version control for maximum security.
 
-- Docker Desktop installed and running.
+## 🛠 Tech Stack
 
-## Getting Started
+- **Backend**: Spring Boot (Java 17), MySQL, Spring Mail, jBcrypt
+- **Frontend**: React 19, Tailwind CSS, Lucide Icons, React Router 7
+- **Infrastructure**: Docker, Docker Compose
 
-1. Clone the repository to your local machine.
-2. Open a terminal in the project root directory.
-3. Run the following command to build and start the containers:
+## 📦 Project Structure
 
+- `/TP1Category`: Spring Boot backend (Core logic, Auth Service, Unified Controllers).
+- `/ecommerce-frontend`: React frontend (Auth Context, Dashboard components, Shop view).
+- `docker-compose.yml`: Orchestration for frontend, backend, and MySQL services.
+
+## 🏁 Getting Started
+
+1. **Clone the repository**.
+2. **Setup Secrets**: Create a `.env` file in the root directory:
+   ```env
+   # Mail credentials for signup notifications
+   MAIL_USERNAME=your-email@gmail.com
+   MAIL_PASSWORD=your-app-password
+   ```
+3. **Launch with Docker**:
+   ```bash
    docker-compose up -d --build
+   ```
+4. **Access the Application**:
+   - **Frontend**: http://localhost:3000
+   - **Default Super Admin**: `superadmin@admin.com` / `SuperAdmin123!`
 
-4. The application will be available at the following URLs:
+---
 
-   - Frontend: http://localhost:3000
-   - Backend API: http://localhost:8080
+## 📸 Visual Gallery
 
-## Features
+### Authentication & Access
+- **Login/Signup Interface**
+![Login Page](./screenshots/login_interface.png)
+- **Secure Signup Success**
+![Signup Success](./screenshots/signup_success.png)
+- **Email Notification**
+![Email Received](./screenshots/email%20sent.png)
 
-- Admin Overview: High-level statistics of inventory, including active orders and carts.
-- Product Management: CRUD operations for products including image URL support.
-- Category Management: Organization of products into categories.
-- Supplier Management: Tracking of supplier contact information and links to products.
-- Order Management: Create orders and dynamically assign multiple products using a modern visual selection interface.
-- Cart Management: Group logic for nesting and associating multiple active orders to dedicated cart buckets.
-- Responsive Design: Clean and functional admin dashboard built with Tailwind CSS.
+### Dashboards
+- **Client Shop (E-commerce)**
+![Client Dashboard](./screenshots/client_shop.png)
+- **Admin Inventory Dashboard**
+![Admin Dashboard](./screenshots/admin_dashboard.png)
+- **Super Admin User Management**
+![Super Admin Dashboard](./screenshots/superadmin_dashboard.png)
 
-## Project Structure
+### Management Interfaces
+- **Order & Cart Logic**
+![Order Selection Modal](./screenshots/order_form.png)
+- **Product & Category Entry**
+![Data Entry Modals](./screenshots/product_form.png)
 
-- /TP1Category: Spring Boot backend source code and Dockerfile.
-- /ecommerce-frontend: React frontend source code and Dockerfile.
-- docker-compose.yml: Orchestration of the frontend, backend, and database services.
+---
 
-## Screenshots
+## 📜 Key Features
 
-### Dashboard Overview
-![Dashboard Overview](./screenshots/dashboard.png)
+- **Automated Inventory Tracking**: Real-time stats on products, categories, and suppliers.
+- **Dynamic Order Creation**: Multi-selection interface for building customer orders.
+- **Persistent Cart System**: Local storage prevents data loss for unauthenticated clients.
+- **User Role Management**: Super Admins can promote/demote users directly through the UI.
+- **Automated Email Flow**: Secure password delivery for new account creations.
 
-### Product Creation Interface
-![Product Modal](./screenshots/product_form.png)
-
-### Category Creation Interface
-![Category Modal](./screenshots/category_form.png)
-
-### Supplier Creation Interface
-![Supplier Modal](./screenshots/supplier_form.png)
-
-### Order Creation Interface
-![Order Modal](./screenshots/order_form.png)
-
-### Cart Grouping Interface
-![Cart Modal](./screenshots/cart_form.png)
